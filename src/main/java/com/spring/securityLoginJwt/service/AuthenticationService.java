@@ -1,7 +1,9 @@
 package com.spring.securityLoginJwt.service;
 
 import com.spring.securityLoginJwt.model.AuthenticationResponse;
+import com.spring.securityLoginJwt.model.Token;
 import com.spring.securityLoginJwt.model.User;
+import com.spring.securityLoginJwt.repository.TokenRepository;
 import com.spring.securityLoginJwt.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,10 +11,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AuthenticationService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TokenRepository tokenRepository;
 
     @Autowired
     private JwtService jwtService;
@@ -39,18 +46,24 @@ public class AuthenticationService {
             return new AuthenticationResponse(null, "User already exist");
         }
 
-        User user = new User();
+        User user = new User();        //registrazione utente
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-
         user.setRole(request.getRole());
+
+        String jwt = jwtService.generateToken(user);
+       // user.setToken(jwt);
 
         user = userRepository.save(user);
 
-        String jwt = jwtService.generateToken(user);
+        Token token = new Token();  //salvataggio token dell utente registrato nella tab token
+        token.setToken(jwt);
+        token.setLoggedOut(false);
+        token.setUser(user);
+        tokenRepository.save(token);
 
        // saveUserToken(jwt, user);
 
@@ -73,6 +86,26 @@ public class AuthenticationService {
 
         return new AuthenticationResponse(jwt, "User login was successful");
 
+    }
+    private void revokeAllTokenByUser(User user) {
+        List<Token> validTokens = tokenRepository.findAllTokensByUser(user.getId());
+        if(validTokens.isEmpty()) {
+            return;
+        }
+
+        validTokens.forEach(t-> {
+            t.setLoggedOut(true);
+        });
+
+        tokenRepository.saveAll(validTokens);
+    }
+
+    private void saveUserToken(String jwt, User user) {
+        Token token = new Token();
+        token.setToken(jwt);
+        token.setLoggedOut(false);
+        token.setUser(user);
+        tokenRepository.save(token);
     }
 
 

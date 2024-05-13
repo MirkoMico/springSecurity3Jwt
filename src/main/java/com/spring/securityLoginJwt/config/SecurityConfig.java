@@ -38,6 +38,7 @@ public class SecurityConfig {
                .authorizeHttpRequests(
                    req-> req.requestMatchers("/login/**", "/register/**")
                        .permitAll()
+                       .requestMatchers("/admin_only/**").hasAuthority("ADMIN")//le chiamate che possono fare solo gli admin
                        .anyRequest()
                        .authenticated()
                ).userDetailsService(userDetailsServiceImpl)
