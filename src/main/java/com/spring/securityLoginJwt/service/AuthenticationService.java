@@ -55,17 +55,14 @@ public class AuthenticationService {
         user.setRole(request.getRole());
 
         String jwt = jwtService.generateToken(user);
-       // user.setToken(jwt);
+        user.setTokenRegistrazione(jwt);
 
         user = userRepository.save(user);
 
-        Token token = new Token();  //salvataggio token dell utente registrato nella tab token
-        token.setToken(jwt);
-        token.setLoggedOut(false);
-        token.setUser(user);
-        tokenRepository.save(token);
 
-       // saveUserToken(jwt, user);
+
+
+        //saveUserToken(jwt, user);//salvataggio token dell utente registrato nella tab token richiamando il metodo saveUserToken
 
         return new AuthenticationResponse(jwt, "User registration was successful");
 
@@ -81,8 +78,8 @@ public class AuthenticationService {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
         String jwt = jwtService.generateToken(user);
 
-       // revokeAllTokenByUser(user);
-       // saveUserToken(jwt, user);
+        revokeAllTokenByUser(user);
+        saveUserToken(jwt, user);
 
         return new AuthenticationResponse(jwt, "User login was successful");
 
@@ -100,13 +97,32 @@ public class AuthenticationService {
         tokenRepository.saveAll(validTokens);
     }
 
-    private void saveUserToken(String jwt, User user) {
+   /* private void saveUserToken(String jwt, User user) {
         Token token = new Token();
         token.setToken(jwt);
         token.setLoggedOut(false);
         token.setUser(user);
         tokenRepository.save(token);
-    }
+    }*/
+   private void saveUserToken(String jwt, User user) {
+       // Controlla se esiste già un token associato a questo utente
+       Token existingToken = tokenRepository.findByUser(user);
+
+       if (existingToken != null) {
+           // Sovrascrivi il token esistente con il nuovo JWT
+           existingToken.setToken(jwt);
+           existingToken.setLoggedOut(false);
+           tokenRepository.save(existingToken);
+       } else {
+           // Crea un nuovo token se non ne esiste uno associato all'utente
+           Token token = new Token();
+           token.setToken(jwt);
+           token.setLoggedOut(false);
+           token.setUser(user);
+           tokenRepository.save(token);
+       }
+   }
+
 
 
 

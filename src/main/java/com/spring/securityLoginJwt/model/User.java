@@ -39,7 +39,7 @@ public class User implements UserDetails {
     @Enumerated(value = EnumType.STRING)
     private Role role;
 
-   // private String token;
+    private String tokenRegistrazione;
 
 
     @Override

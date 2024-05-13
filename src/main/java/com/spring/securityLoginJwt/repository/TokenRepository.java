@@ -1,6 +1,7 @@
 package com.spring.securityLoginJwt.repository;
 
 import com.spring.securityLoginJwt.model.Token;
+import com.spring.securityLoginJwt.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,6 @@ where t.user.id = :userId and t.loggedOut = false
     List<Token> findAllTokensByUser(Integer userId);
 
     Optional<Token> findByToken(String token);
+
+    Token findByUser(User user);
 }
